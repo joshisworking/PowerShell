@@ -1,7 +1,7 @@
 # Powershell
 
 ## Description
-Useful PowerShell scripts for administrating Azure cloud resources
+Useful PowerShell scripts for administrating on-premises and Azure cloud resources
 
 ## Scripts
 
