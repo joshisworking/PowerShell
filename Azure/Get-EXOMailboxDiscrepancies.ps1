@@ -65,7 +65,7 @@ function Get-EXOMailboxDiscrepancies {
     # Attempt to connect to Exchange Online
     try {
         # Update the UserPrincipalName to your Azure admin username and uncomment rest of line for quicker login
-        Connect-ExchangeOnline # -UserPrincipalName josh.
+        Connect-ExchangeOnline # -UserPrincipalName <YourLogin@email.com>
     }
     catch {
         Write-Warning "Error connecting to Exchange Online: $_"

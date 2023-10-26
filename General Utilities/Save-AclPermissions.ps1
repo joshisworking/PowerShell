@@ -5,6 +5,14 @@ Collects and saves security permissions for a specified folder, subfolders and (
 .DESCRIPTION
 The Save-ACLPermissions function allows you to inspect the security permissions of a folder and its sub-items. It recursively explores the folder structure, creating an object for each item that includes its path, owner, group, access rights, and SDDL (Security Descriptor Definition Language). You can choose to display the collected data to the console, export it to a CSV file, or save it as JSON. The function provides flexibility in specifying the folder path to inspect, the export path for saving the collected permissions, and the output format.
 
+If the script takes a long time to run, try running on a shallower file structure.
+
+.PARAMETER Depth
+Specifies the maximum depth for recursive inspection of sub-items within the folder. The default is unlimited depth.
+
+.PARAMETER LongFileNames
+If specified, the function will prepend the full file names with the '\\?\' prefix, allowing for longer file paths. Use this when working with file paths exceeding 260 characters.
+
 .PARAMETER FolderPath
 Specifies the path of the folder to inspect for security permissions. If not provided, the function will default to the current location.
 
@@ -36,12 +44,17 @@ Save-ACLPermissions -FolderPath "C:\MyFolder" -ExportPath "C:\Permissions.csv"
 .EXAMPLE
 # Collect security permissions for a specific folder, save the results as JSON, and display the results for directories only.
 Save-ACLPermissions -FolderPath "D:\AnotherFolder" -JSON
-
 #>
 
 function Save-AclPermissions {
     [CmdletBinding()]
     param (
+        [uint32]
+        $Depth,
+        
+        [switch]
+        $LongFileNames,
+        
         [string] 
         $FolderPath = (Get-Location).Path,
         
@@ -70,18 +83,37 @@ function Save-AclPermissions {
     $queue = New-Object System.Collections.Queue
     $queue.Enqueue($FolderPath)
 
+    Write-Progress -Id 1 -Activity "Collecting items"
     if ($IncludeFiles) {
         Write-Host "Getting access controls for all file can be time consuming in large folders. If this takes too long, cancel the operation and try without -IncludeFiles" -ForegroundColor DarkYellow
-        foreach ($item in Get-ChildItem -Path $FolderPath -Recurse) {
-            $queue.Enqueue($item.FullName)
+        
+        if ($Depth) {
+            $allItems = Get-ChildItem -Path $FolderPath -Recurse -Depth $Depth
+        }
+        else {
+            $allItems = Get-ChildItem -Path $FolderPath -Recurse
+        }
+    }
+    elseif ($Depth) {
+        $allItems = Get-ChildItem -Path $FolderPath -Directory -Recurse -Depth $Depth
+    }
+    else {
+        $allItems = Get-ChildItem -Path $FolderPath -Directory -Recurse
+    }
+
+    Write-Progress -Id 1 -Activity "Queueing items"
+    # If long file names, prepend FullName with the '\\?\' Prefix
+    if ($LongFileNames) {
+        foreach ($item in $allItems) {
+            $fullName = "\\?\$($item.FullName -replace '\\', '\\\')"
+            $queue.Enqueue($fullName)
         }
     }
     else {
-        foreach ($item in Get-ChildItem -Path $FolderPath -Directory -Recurse) {
+        foreach ($item in $allItems) {
             $queue.Enqueue($item.FullName)
         }
     }
-
 
     # Initialize an array to store the permission objects
     $allPermissions = @()
@@ -97,7 +129,7 @@ function Save-AclPermissions {
         $item = $queue.Dequeue()
     
         # Get and save the ACL for the current item
-        $acl = Get-Acl -Path $item.ToString()
+        $acl = Get-Acl -Path $item
         
         # Export Access as object if JSON, else as string
         if ($JSON) {
