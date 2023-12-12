@@ -27,7 +27,7 @@
     To use this function, make sure you are running it in an environment with Active Directory cmdlets available.
 #>
 
-function Copy-ADMemberships {
+function Copy-ADMembership {
     Param(
         [Parameter (Mandatory = $True)]
         [Microsoft.ActiveDirectory.Management.ADAccount]$Source, 

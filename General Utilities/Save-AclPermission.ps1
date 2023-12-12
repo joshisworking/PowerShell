@@ -49,7 +49,7 @@
     Collect security permissions for a specific folder, save the results as JSON, and display the results for directories only.
 #>
 
-function Save-AclPermissions {
+function Save-AclPermission {
     [CmdletBinding()]
     param (
         [uint32]

@@ -52,7 +52,7 @@
     2. This script must be run from an elevated PowerShell session.
     3. The ExchangeOnlineManagement module must be installed for the local PowerShell instance
 #>
-function Get-EXOMailboxDiscrepancies {
+function Get-EXOMailboxDiscrepancy {
 
     # Check if the Connect-ExchangeOnline function is available
     if (-not (Get-Command Connect-ExchangeOnline -ErrorAction SilentlyContinue)) {
@@ -118,4 +118,4 @@ function Get-EXOMailboxDiscrepancies {
     $orphanedMailboxes | Select-Object Identity
 }
 
-Get-EXOMailboxDiscrepancies
+Get-EXOMailboxDiscrepancy
